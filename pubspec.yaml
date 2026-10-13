@@ -1,0 +1,33 @@
+name: ludo_genji
+description: LUDO GENJI - Dark fantasy magical Ludo game
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.4.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.2.3
+  audioplayers: ^5.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: IM Fell English
+      fonts:
+        - asset: assets/fonts/IMFellEnglish-Regular.ttf
+        - asset: assets/fonts/IMFellEnglish-Italic.ttf
+          style: italic
+  assets:
+    - assets/icon/ludo_genji_icon.png
+    - assets/avatars/
+    - assets/pro/genji_pro_knight.png
+    - assets/sounds/
