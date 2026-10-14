@@ -28,7 +28,7 @@ class GoldButton extends StatelessWidget {
             ? null
             : () {
                 SoundService().play('click');
-                onTap();
+                onTap?.call();
               },
         child: Container(
           padding: padding,
