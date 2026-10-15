@@ -37,6 +37,11 @@ class _GameplayScreenState extends State<GameplayScreen>
   String? taunt;
   late AnimationController _glow;
   Timer? _aiTimer;
+  // Step-by-step token animation (Ludo King style): while a token moves,
+  // BoardPainter paints it at _animProgress instead of its real progress.
+  // Game state only changes when game.moveToken() runs after the animation.
+  String? _animTokenKey;
+  int? _animProgress;
 
   @override
   void initState() {
@@ -146,7 +151,44 @@ class _GameplayScreenState extends State<GameplayScreen>
     }
   }
 
-  void _doMove(int token) {
+  /// Moves [token] with a Ludo King style step-by-step animation, then
+  /// applies the real game move (captures, win check, extra turns).
+  Future<void> _doMove(int token) async {
+    if (!mounted || game.gameOver) return;
+    // Lock input for the whole animation so nothing can interrupt it.
+    setState(() => inputLocked = true);
+
+    // --- Visual step-by-step animation (game state untouched) ---
+    final startProg = game.progress[game.turn][token];
+    final diceVal = game.dice ?? 1;
+    final endProg =
+        startProg == -1 ? 0 : (startProg + diceVal).clamp(0, 56);
+    _animTokenKey = '${game.turn}:$token';
+    _animProgress = startProg;
+    if (mounted) setState(() {});
+    if (startProg == -1) {
+      // Leaving base: hop from the base spot onto the start cell.
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (!mounted) return;
+      _animProgress = 0;
+      SoundService().play('move');
+      if (mounted) setState(() {});
+      await Future.delayed(const Duration(milliseconds: 150));
+    } else {
+      // Walk one cell at a time, ~180ms per step, with a sound per step.
+      for (var step = startProg + 1; step <= endProg; step++) {
+        await Future.delayed(const Duration(milliseconds: 180));
+        if (!mounted) return;
+        _animProgress = step;
+        SoundService().play('move');
+        if (mounted) setState(() {});
+      }
+    }
+    // Animation done — clear the visual override before the real move.
+    _animTokenKey = null;
+    _animProgress = null;
+
+    // --- Real game move (unchanged original logic) ---
     if (!mounted || game.gameOver) return;
     final res = game.moveToken(token);
     SoundService().play(res.captured ? 'capture' : 'move');
@@ -293,6 +335,8 @@ class _GameplayScreenState extends State<GameplayScreen>
                               boardTheme: widget.boardTheme,
                               movableKeys: movableKeys,
                               glow: _glow.value,
+                              animTokenKey: _animTokenKey,
+                              animProgress: _animProgress,
                             ),
                           ),
                         ),
@@ -467,17 +511,21 @@ class _GameplayScreenState extends State<GameplayScreen>
         !game.gameOver;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
+      child: Column(
         children: [
-          DiceWidget(
-              value: displayDice, rolling: rolling, size: 64),
-          const SizedBox(width: 16),
-          Expanded(
-            child: GoldButton(
-              label: 'Roll Dice',
-              fontSize: 22,
-              onTap: canRoll ? _humanRoll : null,
-            ),
+          // Tappable dice (Ludo King style) — no Roll Dice button.
+          GestureDetector(
+            onTap: canRoll ? _humanRoll : null,
+            child: DiceWidget(
+                value: displayDice, rolling: rolling, size: 80),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            canRoll
+                ? 'Dice par tap karo'
+                : _playerName(game.turn),
+            style: GenjiTheme.bodyMuted,
+            textAlign: TextAlign.center,
           ),
         ],
       ),
