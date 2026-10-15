@@ -1,0 +1,31 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code download karo
+        uses: actions/checkout@v4
+
+      - name: Flutter setup karo
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.4'
+          channel: 'stable'
+
+      - name: Dependencies lao
+        run: flutter pub get
+
+      - name: APK banao
+        run: flutter build apk --release
+
+      - name: APK save karo
+        uses: actions/upload-artifact@v4
+        with:
+          name: ludo-genji-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
