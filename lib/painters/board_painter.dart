@@ -297,9 +297,13 @@ class BoardPainter extends CustomPainter {
     return _c(cell[0], cell[1], s);
   }
 
+  /// Ludo King style token: white outer border, glossy radial-gradient
+  /// body, inner gold ring, specular highlight. Movable tokens get a
+  /// pulsing gold ring around them.
   void _drawToken(
       Canvas canvas, Offset c, double r, Color team, bool movable) {
     if (movable) {
+      // Pulsing gold ring around movable tokens.
       canvas.drawCircle(
         c,
         r + 3 + glow * 4,
@@ -307,33 +311,46 @@ class BoardPainter extends CustomPainter {
           ..color = GenjiTheme.goldLight.withOpacity(0.55 + glow * 0.3),
       );
     }
-    // shadow
+    // Soft drop shadow (token sits above the board).
     canvas.drawCircle(
-        c.translate(1.5, 2.5), r, Paint()..color = Colors.black45);
-    // body
+        c.translate(2, 3.5),
+        r * 0.95,
+        Paint()..color = Colors.black.withOpacity(0.4));
+    // White outer border (classic Ludo King token edge).
+    canvas.drawCircle(c, r + 1.5, Paint()..color = Colors.white);
+    // Body — radial gradient, bright at top-left, deeper at bottom-right.
     final grad = RadialGradient(
-      colors: [team.withOpacity(0.55), team, team.withOpacity(0.75)],
-      center: const Alignment(-0.4, -0.4),
-      radius: 1.1,
+      colors: [
+        Colors.white.withOpacity(0.6),
+        team.withOpacity(0.85),
+        team,
+        team.withOpacity(0.85),
+      ],
+      stops: const [0.0, 0.3, 0.65, 1.0],
+      center: const Alignment(-0.45, -0.45),
+      radius: 1.15,
     );
     canvas.drawCircle(
         c,
         r,
         Paint()
           ..shader = grad.createShader(Rect.fromCircle(center: c, radius: r)));
-    // gold ring
+    // Inner gold ring for the ornate Genji finish.
     canvas.drawCircle(
         c,
-        r,
+        r * 0.78,
         Paint()
-          ..color = GenjiTheme.goldLight
+          ..color = GenjiTheme.goldLight.withOpacity(0.9)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2);
-    // highlight
+          ..strokeWidth = 1.5);
+    // Glossy specular highlight (top-left, like light on a pawn).
     canvas.drawCircle(
         c.translate(-r * 0.3, -r * 0.35),
-        r * 0.22,
-        Paint()..color = Colors.white.withOpacity(0.75));
+        r * 0.2,
+        Paint()..color = Colors.white.withOpacity(0.85));
+    // Small center dot for depth.
+    canvas.drawCircle(
+        c, r * 0.16, Paint()..color = Colors.white.withOpacity(0.3));
   }
 
   void _drawStar(Canvas canvas, Offset c, double r, Color color) {
@@ -355,3 +372,4 @@ class BoardPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant BoardPainter old) => true;
 }
+
