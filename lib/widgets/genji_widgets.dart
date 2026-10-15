@@ -256,32 +256,57 @@ class _DicePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final r = size.width;
-    // shadow
+    // 3D drop shadow — bigger, offset down-right, soft (physical cube).
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-          Rect.fromLTWH(2, 4, r - 2, r - 2),
+          Rect.fromLTWH(3, 6, r - 3, r - 3),
           Radius.circular(r * 0.22)),
-      Paint()..color = Colors.black45,
+      Paint()..color = Colors.black.withOpacity(0.5),
     );
-    // ivory body
+    // ivory body with 3D gradient (bright top-left → darker bottom-right)
     final body = RRect.fromRectAndRadius(
         Rect.fromLTWH(0, 0, r, r), Radius.circular(r * 0.22));
     final grad = LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [const Color(0xFFFFFDF5), const Color(0xFFE8DCC0)],
+      colors: [
+        const Color(0xFFFFFFFF),
+        const Color(0xFFFFFDF5),
+        const Color(0xFFE8DCC0),
+        const Color(0xFFD4C4A0),
+      ],
+      stops: const [0.0, 0.35, 0.75, 1.0],
     );
     canvas.drawRRect(
         body, Paint()..shader = grad.createShader(body.outerRect));
+    // bevel: light top edge, dark bottom edge (3D cube feel)
+    canvas.drawRRect(
+      body,
+      Paint()
+        ..color = Colors.white.withOpacity(0.8)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = r * 0.02,
+    );
+    // gold border
     canvas.drawRRect(
       body,
       Paint()
         ..color = GenjiTheme.gold
         ..style = PaintingStyle.stroke
-        ..strokeWidth = r * 0.05,
+        ..strokeWidth = r * 0.04,
     );
-    // pips
+    // top-left gloss highlight (light hitting the cube face)
+    final gloss = RRect.fromRectAndRadius(
+        Rect.fromLTWH(r * 0.08, r * 0.05, r * 0.52, r * 0.3),
+        Radius.circular(r * 0.15));
+    canvas.drawRRect(
+        gloss, Paint()..color = Colors.white.withOpacity(0.4));
+    // pips — inset shadow + tiny highlight for 3D depth
+    final pipShadow =
+        Paint()..color = Colors.black.withOpacity(0.25);
     final pip = Paint()..color = const Color(0xFF7A1F1F);
+    final pipGloss =
+        Paint()..color = Colors.white.withOpacity(0.4);
     final o = r * 0.26;
     final c = r / 2;
     final pts = {
@@ -315,7 +340,14 @@ class _DicePainter extends CustomPainter {
       ],
     };
     for (final p in pts[value.clamp(1, 6)]!) {
+      // inset shadow (pip sits slightly into the face)
+      canvas.drawCircle(p.translate(1, 1.5), r * 0.085, pipShadow);
       canvas.drawCircle(p, r * 0.085, pip);
+      // tiny specular highlight on each pip
+      canvas.drawCircle(
+          p.translate(-r * 0.02, -r * 0.025),
+          r * 0.02,
+          pipGloss);
     }
   }
 
@@ -393,3 +425,4 @@ class SpinWheelPainter extends CustomPainter {
   bool shouldRepaint(covariant SpinWheelPainter old) =>
       old.angle != angle;
 }
+
