@@ -351,11 +351,11 @@ class _GameplayScreenState extends State<GameplayScreen>
                                 ),
                               ),
                             ),
-                            // One dice per player, near their home corner.
+                            // One dice per player, INSIDE their base center (Ludo King style).
                             for (var p = 0;
                                 p < widget.numPlayers;
                                 p++)
-                              _cornerDice(p),
+                              _cornerDice(p, boardPx),
                           ],
                         ),
                       ),
@@ -521,11 +521,13 @@ class _GameplayScreenState extends State<GameplayScreen>
     );
   }
 
-  /// Per-player dice at the board corner near that player's home
-  /// (Ludo King style). Only the current player's dice is tappable and
-  /// highlighted; others are dimmed. Positioned by team corner:
-  /// team 0 = top-left, 1 = top-right, 2 = bottom-right, 3 = bottom-left.
-  Widget _cornerDice(int playerIndex) {
+  /// Per-player dice INSIDE their base center (Ludo King style).
+  /// Each player's dice sits at the center of their 6x6 base (tokens are
+  /// at the base corners, so the center is free). Only the current
+  /// player's dice is tappable and highlighted; others are dimmed.
+  /// Base centers in board cells: red (2.5,2.5), green (2.5,11.5),
+  /// yellow (11.5,11.5), blue (11.5,2.5).
+  Widget _cornerDice(int playerIndex, double boardPx) {
     final team = game.teams[playerIndex];
     final isCurrentTurn =
         game.turn == playerIndex && !game.gameOver;
@@ -534,44 +536,48 @@ class _GameplayScreenState extends State<GameplayScreen>
         !_isAiTurn &&
         !rolling &&
         game.dice == null;
-    const diceSize = 40.0;
+    const diceSize = 52.0;
+    final cell = boardPx / 15;
 
-    double? left, top, right, bottom;
+    // Base center (row, col) for each team.
+    double centerRow, centerCol;
     switch (team) {
-      case 0:
-        left = 0;
-        top = 0;
+      case 0: // red — top-left base
+        centerRow = 2.5;
+        centerCol = 2.5;
         break;
-      case 1:
-        right = 0;
-        top = 0;
+      case 1: // green — top-right base
+        centerRow = 2.5;
+        centerCol = 11.5;
         break;
-      case 2:
-        right = 0;
-        bottom = 0;
+      case 2: // yellow — bottom-right base
+        centerRow = 11.5;
+        centerCol = 11.5;
         break;
-      default:
-        left = 0;
-        bottom = 0;
+      default: // blue — bottom-left base
+        centerRow = 11.5;
+        centerCol = 2.5;
         break;
     }
+
+    // Board is at offset (20, 20) inside the Stack.
+    final left = 20 + (centerCol + 0.5) * cell - diceSize / 2;
+    final top = 20 + (centerRow + 0.5) * cell - diceSize / 2;
 
     return Positioned(
       left: left,
       top: top,
-      right: right,
-      bottom: bottom,
       child: Opacity(
-        opacity: isCurrentTurn ? 1.0 : 0.4,
+        opacity: isCurrentTurn ? 1.0 : 0.45,
         child: Container(
           decoration: isCurrentTurn
               ? BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: GenjiTheme.gold.withOpacity(0.7),
-                      blurRadius: 14,
-                      spreadRadius: 2,
+                      color: GenjiTheme.gold.withOpacity(0.8),
+                      blurRadius: 16,
+                      spreadRadius: 3,
                     ),
                   ],
                 )
@@ -579,7 +585,7 @@ class _GameplayScreenState extends State<GameplayScreen>
           child: GestureDetector(
             onTap: canRoll ? _humanRoll : null,
             child: DiceWidget(
-              value: displayDice,
+              value: isCurrentTurn ? displayDice : 6,
               rolling: rolling && isCurrentTurn,
               size: diceSize,
             ),
