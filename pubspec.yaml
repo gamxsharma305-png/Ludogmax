@@ -20,14 +20,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  fonts:
-    - family: IM Fell English
-      fonts:
-        - asset: assets/fonts/IMFellEnglish-Regular.ttf
-        - asset: assets/fonts/IMFellEnglish-Italic.ttf
-          style: italic
-  assets:
-    - assets/icon/ludo_genji_icon.png
-    - assets/avatars/
-    - assets/pro/genji_pro_knight.png
-    - assets/sounds/
