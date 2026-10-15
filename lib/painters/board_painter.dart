@@ -335,14 +335,19 @@ class BoardPainter extends CustomPainter {
         r,
         Paint()
           ..shader = grad.createShader(Rect.fromCircle(center: c, radius: r)));
-    // Inner gold ring for the ornate Genji finish.
+    // Ludo King style: white center dot (pawn center).
     canvas.drawCircle(
         c,
-        r * 0.78,
+        r * 0.42,
+        Paint()..color = Colors.white.withOpacity(0.95));
+    // Thin inner ring around the white dot for definition.
+    canvas.drawCircle(
+        c,
+        r * 0.42,
         Paint()
-          ..color = GenjiTheme.goldLight.withOpacity(0.9)
+          ..color = team.withOpacity(0.35)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5);
+          ..strokeWidth = 1.0);
     // Glossy specular highlight (top-left, like light on a pawn).
     canvas.drawCircle(
         c.translate(-r * 0.3, -r * 0.35),
