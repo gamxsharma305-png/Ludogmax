@@ -321,24 +321,42 @@ class _GameplayScreenState extends State<GameplayScreen>
                       ),
                     ),
                     const SizedBox(height: 6),
-                    // board
+                    // board + per-player dice at corners (Ludo King style)
                     Center(
-                      child: GestureDetector(
-                        onTapDown: (d) =>
-                            _onBoardTap(d, boardPx),
-                        child: AnimatedBuilder(
-                          animation: _glow,
-                          builder: (_, __) => CustomPaint(
-                            size: Size(boardPx, boardPx),
-                            painter: BoardPainter(
-                              game: game,
-                              boardTheme: widget.boardTheme,
-                              movableKeys: movableKeys,
-                              glow: _glow.value,
-                              animTokenKey: _animTokenKey,
-                              animProgress: _animProgress,
+                      child: SizedBox(
+                        width: boardPx + 40,
+                        height: boardPx + 40,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Positioned(
+                              left: 20,
+                              top: 20,
+                              child: GestureDetector(
+                                onTapDown: (d) =>
+                                    _onBoardTap(d, boardPx),
+                                child: AnimatedBuilder(
+                                  animation: _glow,
+                                  builder: (_, __) => CustomPaint(
+                                    size: Size(boardPx, boardPx),
+                                    painter: BoardPainter(
+                                      game: game,
+                                      boardTheme: widget.boardTheme,
+                                      movableKeys: movableKeys,
+                                      glow: _glow.value,
+                                      animTokenKey: _animTokenKey,
+                                      animProgress: _animProgress,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
+                            // One dice per player, near their home corner.
+                            for (var p = 0;
+                                p < widget.numPlayers;
+                                p++)
+                              _cornerDice(p),
+                          ],
                         ),
                       ),
                     ),
@@ -361,7 +379,7 @@ class _GameplayScreenState extends State<GameplayScreen>
                         ),
                       ),
                     const SizedBox(height: 10),
-                    _controls(),
+                    _diceHint(),
                     const SizedBox(height: 16),
                   ],
                 ),
@@ -503,32 +521,87 @@ class _GameplayScreenState extends State<GameplayScreen>
     );
   }
 
-  Widget _controls() {
+  /// Per-player dice at the board corner near that player's home
+  /// (Ludo King style). Only the current player's dice is tappable and
+  /// highlighted; others are dimmed. Positioned by team corner:
+  /// team 0 = top-left, 1 = top-right, 2 = bottom-right, 3 = bottom-left.
+  Widget _cornerDice(int playerIndex) {
+    final team = game.teams[playerIndex];
+    final isCurrentTurn =
+        game.turn == playerIndex && !game.gameOver;
+    final canRoll = isCurrentTurn &&
+        !inputLocked &&
+        !_isAiTurn &&
+        !rolling &&
+        game.dice == null;
+    const diceSize = 40.0;
+
+    double? left, top, right, bottom;
+    switch (team) {
+      case 0:
+        left = 0;
+        top = 0;
+        break;
+      case 1:
+        right = 0;
+        top = 0;
+        break;
+      case 2:
+        right = 0;
+        bottom = 0;
+        break;
+      default:
+        left = 0;
+        bottom = 0;
+        break;
+    }
+
+    return Positioned(
+      left: left,
+      top: top,
+      right: right,
+      bottom: bottom,
+      child: Opacity(
+        opacity: isCurrentTurn ? 1.0 : 0.4,
+        child: Container(
+          decoration: isCurrentTurn
+              ? BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: GenjiTheme.gold.withOpacity(0.7),
+                      blurRadius: 14,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                )
+              : null,
+          child: GestureDetector(
+            onTap: canRoll ? _humanRoll : null,
+            child: DiceWidget(
+              value: displayDice,
+              rolling: rolling && isCurrentTurn,
+              size: diceSize,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Small hint below the board: tap-your-dice when the human can roll.
+  Widget _diceHint() {
     final canRoll = !inputLocked &&
         !_isAiTurn &&
         !rolling &&
         game.dice == null &&
         !game.gameOver;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          // Tappable dice (Ludo King style) — no Roll Dice button.
-          GestureDetector(
-            onTap: canRoll ? _humanRoll : null,
-            child: DiceWidget(
-                value: displayDice, rolling: rolling, size: 80),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            canRoll
-                ? 'Dice par tap karo'
-                : _playerName(game.turn),
-            style: GenjiTheme.bodyMuted,
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+    return Text(
+      canRoll
+          ? 'Apne dice par tap karo'
+          : _playerName(game.turn),
+      style: GenjiTheme.bodyMuted,
+      textAlign: TextAlign.center,
     );
   }
 
@@ -541,3 +614,4 @@ class _GameplayScreenState extends State<GameplayScreen>
     'Checkmate... er, checkers!',
   ];
 }
+
