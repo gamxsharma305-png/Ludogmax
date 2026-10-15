@@ -64,12 +64,19 @@ class BoardPainter extends CustomPainter {
   final int boardTheme;
   final Set<String> movableKeys; // "player:token"
   final double glow; // 0..1 pulse for movable tokens
+  // Step-by-step animation override (Ludo King style): when set, the token
+  // with key "player:token" is painted at [animProgress] instead of its
+  // real game progress. Game state itself is untouched until moveToken().
+  final String? animTokenKey;
+  final int? animProgress;
 
   BoardPainter({
     required this.game,
     required this.boardTheme,
     required this.movableKeys,
     this.glow = 0,
+    this.animTokenKey,
+    this.animProgress,
   });
 
   @override
@@ -237,7 +244,12 @@ class BoardPainter extends CustomPainter {
     for (var p = 0; p < game.numPlayers; p++) {
       final team = game.teams[p];
       for (var t = 0; t < 4; t++) {
-        final prog = game.progress[p][t];
+        var prog = game.progress[p][t];
+        // Animation override: paint the animating token at its
+        // in-flight position instead of its real game progress.
+        if ('$p:$t' == animTokenKey && animProgress != null) {
+          prog = animProgress!;
+        }
         final key = _cellKey(team, t, prog);
         byCell.putIfAbsent(key, () => []).add([p, t, team, prog]);
       }
