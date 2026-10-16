@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/genji_theme.dart';
 import '../services/store.dart';
+import '../services/sound_service.dart';
 import '../widgets/genji_widgets.dart';
 import 'player_selection_screen.dart';
 import 'avatar_screen.dart';
@@ -13,7 +14,7 @@ import 'tournaments_screen.dart';
 import 'settings_screen.dart';
 import 'online_screen.dart';
 
-/// The Ludo Genji Main Hub — central control for all modes.
+/// The Ludo Genji Main Hub — reference layout: stone tiles + Pro banner.
 class MainHubScreen extends StatefulWidget {
   const MainHubScreen({super.key});
 
@@ -22,189 +23,230 @@ class MainHubScreen extends StatefulWidget {
 }
 
 class _MainHubScreenState extends State<MainHubScreen> {
+  int _bottomIndex = 0;
+
   @override
   Widget build(BuildContext context) {
-    final store = GameStore();
     final tiles = [
-      _Tile('Computer', Icons.computer_rounded,
-          'AI ke khilaf khelo', () {
+      _Tile('Computer', Icons.computer_rounded, () {
         _go(const PlayerSelectionScreen(vsComputer: true));
       }),
-      _Tile('Pass and Play', Icons.people_rounded,
-          'Ek phone, doston ke saath', () {
+      _Tile('Pass and Play', Icons.casino_rounded, () {
         _go(const PlayerSelectionScreen(vsComputer: false));
       }),
-      _Tile('Online Multiplayer', Icons.public_rounded,
-          'Duniya bhar ke khiladi', () {
+      _Tile('Online\nMultiplayer', Icons.groups_rounded, () {
         _go(const OnlineScreen());
       }),
-      _Tile('Tournaments', Icons.emoji_events_rounded,
-          'Bracket aur inaam', () {
+      _Tile('Tournaments', Icons.emoji_events_rounded, () {
         _go(const TournamentsScreen());
       }),
-      _Tile('Leaderboard', Icons.leaderboard_rounded,
-          'Sabse upar kaun?', () {
+      _Tile('Leaderboard', Icons.emoji_events_outlined, () {
         _go(const StatsScreen());
       }),
-      _Tile('Shop', Icons.store_rounded, 'Frames aur boards',
-          () {
+      _Tile('Shop', Icons.storefront_rounded, () {
         _go(const ShopScreen());
       }),
-      _Tile('Daily Spin', Icons.casino_rounded,
-          'Roz ka inaam chakkar', () {
+      _Tile('Daily Spin', Icons.autorenew_rounded, () {
         _go(const SpinScreen());
       }),
-      _Tile('Rewards', Icons.card_giftcard_rounded,
-          'Daily rewards lo', () {
+      _Tile('Rewards', Icons.card_giftcard_rounded, () {
         _go(const RewardsScreen());
       }),
-      _Tile('Settings', Icons.settings_rounded,
-          'Sound, profile, reset', () {
+      _Tile('Settings', Icons.settings_rounded, () {
         _go(const SettingsScreen());
       }),
     ];
 
     return Scaffold(
+      backgroundColor: const Color(0xFF0D0F1A),
       body: Container(
-        decoration: BoxDecoration(gradient: GenjiTheme.bgGradient),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF0D0F1A),
+              Color(0xFF12152A),
+              Color(0xFF0A0C16),
+            ],
+          ),
+        ),
         child: SafeArea(
           bottom: false,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // top bar
-                Row(
+          child: Column(
+            children: [
+              // Top title bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                child: Row(
                   children: [
+                    const Spacer(),
+                    Text(
+                      'Ludo Genji',
+                      style: GenjiTheme.titleGold.copyWith(
+                        fontSize: 26,
+                        letterSpacing: 1.4,
+                      ),
+                    ),
+                    const Spacer(),
                     GestureDetector(
-                      onTap: () => _go(const AvatarScreen())
-                          .then((_) => setState(() {})),
-                      child: AvatarCircle(
-                        avatarIndex: store.avatarIndex,
-                        frameIndex: store.frameIndex,
-                        size: 52,
+                      onTap: () => _go(const SettingsScreen()),
+                      child: Icon(
+                        Icons.settings_rounded,
+                        color: GenjiTheme.goldLight.withOpacity(0.85),
+                        size: 26,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Ludo Genji',
-                            style: GenjiTheme.titleGold
-                                .copyWith(fontSize: 22),
-                          ),
-                          Text(
-                            store.username,
-                            style: GenjiTheme.bodyMuted,
-                          ),
-                        ],
-                      ),
-                    ),
-                    CoinPill(coins: store.coins),
                   ],
                 ),
-                const SizedBox(height: 16),
-                // Genji Pro banner
-                GestureDetector(
-                  onTap: () =>
-                      _go(const ProScreen()).then((_) => setState(() {})),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFF3B2A10),
-                          Color(0xFF1A2038)
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                          color: GenjiTheme.gold, width: 1.5),
+              ),
+              const SizedBox(height: 8),
+              // 3x3 stone grid
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                      childAspectRatio: 0.95,
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            borderRadius:
-                                BorderRadius.circular(14),
-                            border: Border.all(
-                                color: GenjiTheme.goldLight),
-                          ),
-                          child: ClipRRect(
-                            borderRadius:
-                                BorderRadius.circular(13),
-                            child: Image.asset(
-                              'assets/pro/genji_pro_knight.png',
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                                  const Icon(
-                                      Icons
-                                          .auto_awesome_rounded,
-                                      color:
-                                          GenjiTheme.goldLight,
-                                      size: 30),
+                    itemCount: tiles.length,
+                    itemBuilder: (_, i) => _stoneTile(tiles[i]),
+                  ),
+                ),
+              ),
+              // Pro membership banner
+              GestureDetector(
+                onTap: () =>
+                    _go(const ProScreen()).then((_) => setState(() {})),
+                child: Container(
+                  margin: const EdgeInsets.fromLTRB(14, 4, 14, 10),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF4A2C0A),
+                        Color(0xFF2A1A08),
+                        Color(0xFF1A1208),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: GenjiTheme.gold.withOpacity(0.7),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: GenjiTheme.gold.withOpacity(0.15),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: GenjiTheme.goldGradient,
+                          border: Border.all(
+                              color: GenjiTheme.goldLight, width: 1.5),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'LG',
+                            style: TextStyle(
+                              color: Color(0xFF1A1206),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Genji Pro',
-                                style: TextStyle(
-                                  fontFamily:
-                                      GenjiTheme.fontFell,
-                                  color: GenjiTheme.goldLight,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Ludo Genji Pro',
+                              style: TextStyle(
+                                fontFamily: GenjiTheme.fontFell,
+                                color: GenjiTheme.goldLight,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
-                              Text(
-                                'AI assistant + premium rewards',
-                                style: GenjiTheme.bodyMuted,
-                              ),
-                            ],
-                          ),
+                            ),
+                            Text(
+                              'Membership Benefits',
+                              style: GenjiTheme.bodyMuted
+                                  .copyWith(fontSize: 12),
+                            ),
+                          ],
                         ),
-                        const Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            color: GenjiTheme.goldLight,
-                            size: 18),
-                      ],
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: GenjiTheme.goldLight.withOpacity(0.8),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Bottom navigation
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0A0C14),
+                  border: Border(
+                    top: BorderSide(
+                      color: GenjiTheme.gold.withOpacity(0.25),
+                      width: 1,
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                // 3x3 grid
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 0.92,
+                child: SafeArea(
+                  top: false,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _navItem(Icons.home_rounded, 0, () {}),
+                      _navItem(Icons.emoji_events_rounded, 1, () {
+                        _go(const TournamentsScreen());
+                      }),
+                      _navItem(Icons.person_rounded, 2, () {
+                        _go(const AvatarScreen())
+                            .then((_) => setState(() {}));
+                      }),
+                    ],
                   ),
-                  itemCount: tiles.length,
-                  itemBuilder: (_, i) =>
-                      _hubTile(context, tiles[i]),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _navItem(IconData icon, int index, VoidCallback onTap) {
+    final active = _bottomIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _bottomIndex = index);
+        onTap();
+      },
+      child: Icon(
+        icon,
+        color: active ? GenjiTheme.goldLight : GenjiTheme.muted,
+        size: 28,
       ),
     );
   }
@@ -214,30 +256,49 @@ class _MainHubScreenState extends State<MainHubScreen> {
         .push(MaterialPageRoute(builder: (_) => page));
   }
 
-  Widget _hubTile(BuildContext context, _Tile tile) {
+  /// Stone-textured tile matching the reference screenshots.
+  Widget _stoneTile(_Tile tile) {
     return GestureDetector(
-      onTap: tile.onTap,
-      child: OrnateCard(
-        padding: const EdgeInsets.all(10),
-        radius: 16,
+      onTap: () {
+        SoundService().play('click');
+        tile.onTap();
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF2A2E42),
+              Color(0xFF1C2034),
+              Color(0xFF151828),
+            ],
+          ),
+          border: Border.all(
+            color: const Color(0xFF4A5068).withOpacity(0.7),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.55),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+            BoxShadow(
+              color: Colors.white.withOpacity(0.04),
+              blurRadius: 1,
+              offset: const Offset(0, -1),
+            ),
+          ],
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: GenjiTheme.goldGradient,
-                boxShadow: [
-                  BoxShadow(
-                    color: GenjiTheme.gold.withOpacity(0.4),
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-              child: Icon(tile.icon,
-                  color: const Color(0xFF1A1206), size: 24),
+            Icon(
+              tile.icon,
+              color: GenjiTheme.parchment.withOpacity(0.9),
+              size: 32,
             ),
             const SizedBox(height: 8),
             Text(
@@ -245,18 +306,10 @@ class _MainHubScreenState extends State<MainHubScreen> {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: GenjiTheme.parchment,
-                fontWeight: FontWeight.bold,
-                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                height: 1.15,
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              tile.subtitle,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                  color: GenjiTheme.muted, fontSize: 10),
             ),
           ],
         ),
@@ -268,7 +321,6 @@ class _MainHubScreenState extends State<MainHubScreen> {
 class _Tile {
   final String title;
   final IconData icon;
-  final String subtitle;
   final VoidCallback onTap;
-  _Tile(this.title, this.icon, this.subtitle, this.onTap);
+  _Tile(this.title, this.icon, this.onTap);
 }
