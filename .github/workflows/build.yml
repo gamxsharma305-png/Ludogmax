@@ -21,6 +21,9 @@ jobs:
       - name: Dependencies lao
         run: flutter pub get
 
+      - name: App icon generate karo
+        run: dart run flutter_launcher_icons
+
       - name: APK banao
         run: flutter build apk --release
 
