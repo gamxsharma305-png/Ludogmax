@@ -24,11 +24,18 @@ jobs:
       - name: App icon generate karo
         run: dart run flutter_launcher_icons
 
-      - name: APK banao
-        run: flutter build apk --release
+      - name: APK banao (arm64 only - smaller)
+        run: flutter build apk --release --split-per-abi --target-platform android-arm64
+
+      - name: APK verify karo
+        run: |
+          ls -lh build/app/outputs/flutter-apk/
+          file build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          unzip -t build/app/outputs/flutter-apk/app-arm64-v8a-release.apk | tail -5
 
       - name: APK save karo
         uses: actions/upload-artifact@v4
         with:
           name: ludo-genji-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          compression-level: 0
