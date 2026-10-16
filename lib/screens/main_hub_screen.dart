@@ -14,7 +14,8 @@ import 'tournaments_screen.dart';
 import 'settings_screen.dart';
 import 'online_screen.dart';
 
-/// The Ludo Genji Main Hub — reference layout: stone tiles + Pro banner.
+/// The Ludo Genji Main Hub — EXACT match to reference image:
+/// 2-column stone-tile grid, gold borders, Pro banner, 4-icon bottom nav.
 class MainHubScreen extends StatefulWidget {
   const MainHubScreen({super.key});
 
@@ -40,7 +41,7 @@ class _MainHubScreenState extends State<MainHubScreen> {
       _Tile('Tournaments', Icons.emoji_events_rounded, () {
         _go(const TournamentsScreen());
       }),
-      _Tile('Leaderboard', Icons.emoji_events_outlined, () {
+      _Tile('Leaderboard', Icons.leaderboard_rounded, () {
         _go(const StatsScreen());
       }),
       _Tile('Shop', Icons.storefront_rounded, () {
@@ -58,16 +59,16 @@ class _MainHubScreenState extends State<MainHubScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0F1A),
+      backgroundColor: const Color(0xFF0A0C16),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF0D0F1A),
-              Color(0xFF12152A),
+              Color(0xFF0D101F),
               Color(0xFF0A0C16),
+              Color(0xFF080A12),
             ],
           ),
         ),
@@ -75,25 +76,25 @@ class _MainHubScreenState extends State<MainHubScreen> {
           bottom: false,
           child: Column(
             children: [
-              // Top title bar
+              // Top title bar — "Ludo Genji" centered, gear top-right.
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
                 child: Row(
                   children: [
                     const Spacer(),
                     Text(
                       'Ludo Genji',
                       style: GenjiTheme.titleGold.copyWith(
-                        fontSize: 26,
-                        letterSpacing: 1.4,
+                        fontSize: 28,
+                        letterSpacing: 1.5,
                       ),
                     ),
                     const Spacer(),
                     GestureDetector(
                       onTap: () => _go(const SettingsScreen()),
-                      child: Icon(
+                      child: const Icon(
                         Icons.settings_rounded,
-                        color: GenjiTheme.goldLight.withOpacity(0.85),
+                        color: GenjiTheme.goldLight,
                         size: 26,
                       ),
                     ),
@@ -101,48 +102,50 @@ class _MainHubScreenState extends State<MainHubScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              // 3x3 stone grid
+              // 2-COLUMN stone-tile grid (reference layout).
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GridView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 0.95,
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 14,
+                      crossAxisSpacing: 14,
+                      childAspectRatio: 1.35,
                     ),
                     itemCount: tiles.length,
                     itemBuilder: (_, i) => _stoneTile(tiles[i]),
                   ),
                 ),
               ),
-              // Pro membership banner
+              // Pro membership banner — dark maroon + gold emblem.
               GestureDetector(
                 onTap: () =>
                     _go(const ProScreen()).then((_) => setState(() {})),
                 child: Container(
-                  margin: const EdgeInsets.fromLTRB(14, 4, 14, 10),
+                  margin: const EdgeInsets.fromLTRB(16, 6, 16, 12),
                   padding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
                       colors: [
-                        Color(0xFF4A2C0A),
-                        Color(0xFF2A1A08),
-                        Color(0xFF1A1208),
+                        Color(0xFF3D1A1A),
+                        Color(0xFF2A1212),
+                        Color(0xFF1A0E0E),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: GenjiTheme.gold.withOpacity(0.7),
+                      color: GenjiTheme.gold.withOpacity(0.6),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: GenjiTheme.gold.withOpacity(0.15),
+                        color: Colors.black.withOpacity(0.5),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -150,22 +153,46 @@ class _MainHubScreenState extends State<MainHubScreen> {
                   ),
                   child: Row(
                     children: [
+                      // Ornate emblem — Pro knight image, gold ring fallback.
                       Container(
-                        width: 42,
-                        height: 42,
+                        width: 46,
+                        height: 46,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: GenjiTheme.goldGradient,
                           border: Border.all(
-                              color: GenjiTheme.goldLight, width: 1.5),
+                              color: GenjiTheme.gold, width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: GenjiTheme.gold.withOpacity(0.4),
+                              blurRadius: 8,
+                            ),
+                          ],
                         ),
-                        child: const Center(
-                          child: Text(
-                            'LG',
-                            style: TextStyle(
-                              color: Color(0xFF1A1206),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/pro/genji_pro_knight.png',
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Color(0xFFE8C15A),
+                                    Color(0xFF8A6D1B)
+                                  ],
+                                ),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'G',
+                                  style: TextStyle(
+                                    color: Color(0xFF1A1206),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 22,
+                                    fontFamily: 'IM Fell English',
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -180,7 +207,7 @@ class _MainHubScreenState extends State<MainHubScreen> {
                               style: TextStyle(
                                 fontFamily: GenjiTheme.fontFell,
                                 color: GenjiTheme.goldLight,
-                                fontSize: 16,
+                                fontSize: 17,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -194,20 +221,21 @@ class _MainHubScreenState extends State<MainHubScreen> {
                       ),
                       Icon(
                         Icons.chevron_right_rounded,
-                        color: GenjiTheme.goldLight.withOpacity(0.8),
+                        color: GenjiTheme.goldLight.withOpacity(0.9),
+                        size: 26,
                       ),
                     ],
                   ),
                 ),
               ),
-              // Bottom navigation
+              // Bottom navigation — 4 icons (reference): Home, Grid, Heart, Person.
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0A0C14),
+                  color: const Color(0xFF080A12),
                   border: Border(
                     top: BorderSide(
-                      color: GenjiTheme.gold.withOpacity(0.25),
+                      color: GenjiTheme.gold.withOpacity(0.2),
                       width: 1,
                     ),
                   ),
@@ -218,10 +246,14 @@ class _MainHubScreenState extends State<MainHubScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       _navItem(Icons.home_rounded, 0, () {}),
-                      _navItem(Icons.emoji_events_rounded, 1, () {
-                        _go(const TournamentsScreen());
+                      _navItem(Icons.grid_view_rounded, 1, () {
+                        // Grid = main hub (already here).
+                        setState(() => _bottomIndex = 1);
                       }),
-                      _navItem(Icons.person_rounded, 2, () {
+                      _navItem(Icons.favorite_rounded, 2, () {
+                        _go(const RewardsScreen());
+                      }),
+                      _navItem(Icons.person_rounded, 3, () {
                         _go(const AvatarScreen())
                             .then((_) => setState(() {}));
                       }),
@@ -256,7 +288,8 @@ class _MainHubScreenState extends State<MainHubScreen> {
         .push(MaterialPageRoute(builder: (_) => page));
   }
 
-  /// Stone-textured tile matching the reference screenshots.
+  /// Stone-textured tile — EXACT reference match:
+  /// dark slate-stone gradient, warm GOLD border, parchment icon + label.
   Widget _stoneTile(_Tile tile) {
     return GestureDetector(
       onTap: () {
@@ -266,49 +299,70 @@ class _MainHubScreenState extends State<MainHubScreen> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
+          // Layered stone gradient: dark slate with warm undertones.
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF2A2E42),
-              Color(0xFF1C2034),
-              Color(0xFF151828),
+              Color(0xFF2E3247),
+              Color(0xFF22263A),
+              Color(0xFF1A1E2E),
+              Color(0xFF141726),
             ],
+            stops: [0.0, 0.4, 0.75, 1.0],
           ),
+          // Warm GOLD border (reference has amber-gold, not gray).
           border: Border.all(
-            color: const Color(0xFF4A5068).withOpacity(0.7),
+            color: const Color(0xFFB8860B).withOpacity(0.75),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.55),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
+              color: Colors.black.withOpacity(0.6),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
+            // Top highlight — stone edge catching light.
             BoxShadow(
-              color: Colors.white.withOpacity(0.04),
-              blurRadius: 1,
+              color: Colors.white.withOpacity(0.06),
+              blurRadius: 2,
               offset: const Offset(0, -1),
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            Icon(
-              tile.icon,
-              color: GenjiTheme.parchment.withOpacity(0.9),
-              size: 32,
+            // Subtle stone texture: faint diagonal streaks.
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(13),
+                child: CustomPaint(
+                  painter: _StoneTexturePainter(),
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              tile.title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: GenjiTheme.parchment,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                height: 1.15,
+            // Icon + label centered.
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    tile.icon,
+                    color: const Color(0xFFF5EFE0).withOpacity(0.92),
+                    size: 38,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    tile.title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFFF5EFE0),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      height: 1.15,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -316,6 +370,40 @@ class _MainHubScreenState extends State<MainHubScreen> {
       ),
     );
   }
+}
+
+/// Paints faint stone-grain streaks over a tile for the rough slate look.
+class _StoneTexturePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.03)
+      ..strokeWidth = 1.0;
+    // Diagonal streaks.
+    for (var i = 0; i < 8; i++) {
+      final y = size.height * (i / 8);
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.width, y + size.height * 0.15),
+        paint,
+      );
+    }
+    // Darker patches for stone variation.
+    final dark = Paint()..color = Colors.black.withOpacity(0.08);
+    canvas.drawCircle(
+      Offset(size.width * 0.2, size.height * 0.3),
+      size.width * 0.25,
+      dark,
+    );
+    canvas.drawCircle(
+      Offset(size.width * 0.8, size.height * 0.7),
+      size.width * 0.3,
+      dark,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _Tile {
